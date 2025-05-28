@@ -2,9 +2,7 @@ package project;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -12,6 +10,7 @@ import org.junit.runners.Parameterized;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
 @RunWith(Parameterized.class)
@@ -43,11 +42,6 @@ public class CreateOrderTest {
         });
     }
 
-    @Before
-    public void setUp() {
-        RestAssured.baseURI= "https://qa-scooter.praktikum-services.ru";
-    }
-
     @Test
     @DisplayName("Создание заказа")
     @Description("Позитивная проверка на создание заказа с выбором цвета")
@@ -63,7 +57,7 @@ public class CreateOrderTest {
 
         createOrdersSteps.createOrder(firstName, lastName, address, metroStation,
                         phone, rentTime, deliveryDate, comment, color)
-                .statusCode(201)
+                .statusCode(SC_CREATED)
                 .body("track", notNullValue());
     }
 }

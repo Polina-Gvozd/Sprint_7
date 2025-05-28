@@ -2,12 +2,12 @@ package project;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
+import io.restassured.response.Response;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.is;
 
 
@@ -17,12 +17,6 @@ public class CreateCourierTest {
 
     String login;
     String password;
-    String firstName;
-
-    @Before
-    public void setUp() {
-        RestAssured.baseURI= "https://qa-scooter.praktikum-services.ru";
-    }
 
     @Test
     @DisplayName("Создание курьера")
@@ -30,10 +24,9 @@ public class CreateCourierTest {
     public void createOkTest(){
         login = RandomStringUtils.randomAlphabetic(10);
         password = RandomStringUtils.randomAlphabetic(10);
-        firstName = RandomStringUtils.randomAlphabetic(10);
 
-        courierSteps.createCourier(login, password, firstName)
-                .statusCode(201)
+        courierSteps.createCourier(login, password)
+                .statusCode(SC_CREATED)
                 .body("ok", is(true));
     }
 
@@ -43,11 +36,10 @@ public class CreateCourierTest {
     public void sameLoginTest(){
         login = RandomStringUtils.randomAlphabetic(10);
         password = RandomStringUtils.randomAlphabetic(10);
-        firstName = RandomStringUtils.randomAlphabetic(10);
 
-        courierSteps.createCourier(login, password, firstName);
-        courierSteps.createCourier(login, password, firstName)
-                .statusCode(409)
+        courierSteps.createCourier(login, password);
+        courierSteps.createCourier(login, password)
+                .statusCode(SC_CONFLICT)
                 .body("message", is("Этот логин уже используется. Попробуйте другой."));
     }
 
@@ -56,10 +48,9 @@ public class CreateCourierTest {
     @Description("Негативная проверка на создание курьера без ввода логина, ожидаем код 400")
     public void createWithoutLoginTest(){
         password = RandomStringUtils.randomAlphabetic(10);
-        firstName = RandomStringUtils.randomAlphabetic(10);
 
-        courierSteps.createCourier("", password, firstName)
-                .statusCode(400)
+        courierSteps.createCourier(null, password)
+                .statusCode(SC_BAD_REQUEST)
                 .body("message", is("Недостаточно данных для создания учетной записи"));
     }
 
@@ -68,18 +59,18 @@ public class CreateCourierTest {
     @Description("Негативная проверка на создание курьера без ввода пароля, ожидаем код 400")
     public void createWithoutPasswordTest(){
         login = RandomStringUtils.randomAlphabetic(10);
-        firstName = RandomStringUtils.randomAlphabetic(10);
 
-        courierSteps.createCourier(login, "", firstName)
-                .statusCode(400)
+        courierSteps.createCourier(login, null)
+                .statusCode(SC_BAD_REQUEST)
                 .body("message", is("Недостаточно данных для создания учетной записи"));
     }
 
 
     @After
     public void tearDown(){
-        Integer id = courierSteps.getId(login, password).extract().path("id");
-        if (id != null) {
+        Response loginResponse = courierSteps.loginCourier(login, password).extract().response();
+        if (loginResponse.getStatusCode() == SC_OK) {
+            Integer id = loginResponse.path("id");
             courierSteps.deleteCourier(id);
         }
     }

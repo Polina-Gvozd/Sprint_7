@@ -1,16 +1,13 @@
 package project;
 
 import io.qameta.allure.Step;
-import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 
-import static io.restassured.RestAssured.given;
 
-public class GetOrderListSteps {
+public class GetOrderListSteps extends BaseApi {
     @Step("Вызов ручки получения списка заказов")
     public ValidatableResponse getOrderList() {
-        return given()
-                .contentType(ContentType.JSON)
+        return requestSpecification
                 .when()
                 .get("/api/v1/orders")
                 .then();
